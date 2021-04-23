@@ -1,0 +1,200 @@
+---
+title: "MTT_trial3_and4"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+Trial 3 
+#normalized data attempt
+
+library(tidyverse)
+normalized_trialthree <- read_csv("/Users/sophiavarady/Desktop/normalizedattempt_trial3.csv")
+
+
+control_only_normalthree <- normalized_trialthree  %>% 
+  filter( medium_only == "yes" | cells_only == "yes" | dmso_control == "yes")
+
+controls_three <- as.data.frame(control_only_normalthree) %>%
+  mutate(control = case_when(
+    medium_only == "yes" ~ "medium only",
+    cells_only == "yes" ~ "cells only", 
+    dmso_control == "yes" ~ "dmso control"
+  ))
+
+# creating non-control dataframe
+
+full_dat_normalizedtrial <- normalized_trialthree %>% 
+  filter(medium_only == "no" & cells_only == "no" & dmso_control == "no")
+
+
+control_only_normalthree <- control_only_normalthree %>%
+  mutate(concentration = case_when(
+    concentration == "na" ~ NA_real_, 
+    concentration == "hi" ~ 20, 
+    concentration == "med" ~ 1, 
+    concentration == "low" ~ .02
+  ))
+
+#3 control dfs
+medium_only <- control_only_normalthree %>%
+  filter(medium_only == "yes")
+
+cells_only <- control_only_normalthree %>%
+  filter(cells_only == "yes")
+
+dmso_control <- control_only_normalthree %>%
+  filter(dmso_control == "yes")
+
+concentrations <- full_dat_normalizedtrial %>%
+  mutate(concentration = as_factor(concentration))%>%
+  mutate(concentration = fct_relevel(concentration, c('20', '10', '5', '1', '.5', '.1', '.02')))
+
+# plots for non-control 550 (all ligands together in plot below)
+
+
+ggplot(concentrations, aes(
+  x = parse_number(as.character(concentration)), 
+  y = absorbance_550,
+  color = SERM)
+) +
+  geom_point(alpha = 0.7, show.legend = T) +
+  geom_point(data = dmso_control, aes(x = concentration, y = absorbance_550), inherit.aes = FALSE) +
+  scale_x_log10(breaks = c(NA, .02, .1, .5, 1, 5, 10, 20)) +
+  #  scale_x_continuous(breaks = c(.02, .1, .5, 1, 5, 10, 20)) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  # scale_y_log10() +
+  #facet_wrap(~SERM) +
+  labs(title = "MTT Assay (Trial 3)", x= "Ligand Concentration (µM)", y= "Absorbance (550 nm)") 
+
+#for individual ligands normalized
+
+
+ggplot(concentrations, aes(
+  x = parse_number(as.character(concentration)), 
+  y = normalized,
+  color = SERM)
+) +
+  geom_point(alpha = 0.7, show.legend = T) +
+  # geom_point(data = dmso_control, aes(x = concentration, y = normalized), inherit.aes = FALSE) +
+  scale_x_log10(breaks = c(NA, .02, .1, .5, 1, 5, 10, 20)) +
+  #  scale_x_continuous(breaks = c(.02, .1, .5, 1, 5, 10, 20)) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  # scale_y_log10() +
+  facet_wrap(~SERM) +
+  labs(title = "Normalized MTT Assay (Trial 3)", x= "Ligand Concentration (µM)", y= "Absorbance (550 nm)") 
+
+#for individual ligands not normalized
+
+ggplot(concentrations, aes(
+  x = parse_number(as.character(concentration)), 
+  y = normalized,
+  color = SERM)
+) +
+  geom_point(alpha = 0.7, show.legend = T) +
+  # geom_point(data = dmso_control, aes(x = concentration, y = normalized), inherit.aes = FALSE) +
+  scale_x_log10(breaks = c(NA, .02, .1, .5, 1, 5, 10, 20)) +
+  #  scale_x_continuous(breaks = c(.02, .1, .5, 1, 5, 10, 20)) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  # scale_y_log10() +
+  facet_wrap(~SERM) +
+  labs(title = "Normalized MTT Assay (Trial 3)", x= "Ligand Concentration (µM)", y= "Absorbance (550 nm)") 
+
+#cell count plot based on linear regression equation
+
+ggplot(concentrations, aes(
+  x = parse_number(as.character(concentration)), 
+  y = cell_count,
+  color = SERM)
+) +
+  geom_point(alpha = 0.7, show.legend = T) +
+  # geom_point(data = dmso_control, aes(x = concentration, y = normalized), inherit.aes = FALSE) +
+  scale_x_log10(breaks = c(NA, .02, .1, .5, 1, 5, 10, 20)) +
+  #  scale_x_continuous(breaks = c(.02, .1, .5, 1, 5, 10, 20)) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  # scale_y_log10() +
+  #facet_wrap(~SERM) +
+  labs(title = "Normalized MTT Assay Cell Count (Trial 3)", x= "Ligand Concentration (µM)", y= "Cell Count") 
+
+
+
+#controls trial 3
+
+ggplot(controls_three, aes(x = concentration, y = normalized, color = control)) +
+  geom_jitter(width = .1, height = 0) +
+  # facet_wrap(~ plate_number) + 
+  #scale_y_log10() +
+  labs(title = "MTT Assay Control Treatments (Trial 3)", x = "Concentration (nM)", y = "Absorbance (550nm)") 
+
+
+#Trial 4
+
+trialfour <- read_csv("/Users/sophiavarady/Desktop/MTTtrial4.csv")
+
+
+control_only_trialfour <- trialfour  %>% 
+  filter( medium_only == "yes" | cells_only == "yes" | dmso_control == "yes")
+
+# creating non-control dataframe
+
+full_dat_trialfour<- trialfour %>% 
+  filter(medium_only == "no" & cells_only == "no" & dmso_control == "no")
+
+
+control_only_trialfour <- control_only_trialfour %>%
+  mutate(concentration = case_when(
+    concentration == "na" ~ NA_real_, 
+    concentration == "hi" ~ 20, 
+    concentration == "med" ~ 1, 
+    concentration == "low" ~ .02
+  ))
+
+#3 control dfs
+medium_only <- control_only_trialfour %>%
+  filter(medium_only == "yes")
+
+cells_only <- control_only_trialfour %>%
+  filter(cells_only == "yes")
+
+dmso_control <- control_only_trialfour %>%
+  filter(dmso_control == "yes")
+
+concentrations_four <- full_dat_trialfour %>%
+  mutate(concentration = as_factor(concentration))%>%
+  mutate(concentration = fct_relevel(concentration, c('20', '10', '5', '1', '.5', '.1', '.02')))
+
+# plots for non-control 550 (all ligands together in plot below)
+
+
+ggplot(concentrations_four, aes(
+  x = parse_number(as.character(concentration)), 
+  y = cell_count,
+  color = SERM)
+) +
+  geom_point(alpha = 0.7, show.legend = T) +
+  #geom_point(data = dmso_control, aes(x = concentration, y = absorbance_550), inherit.aes = FALSE) +
+  scale_x_log10(breaks = c(NA, .02, .1, .5, 1, 5, 10, 20)) +
+  #  scale_x_continuous(breaks = c(.02, .1, .5, 1, 5, 10, 20)) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  scale_y_log10() +
+  #facet_wrap(~SERM) +
+  labs(title = "MTT Assay Cell Count (Trial 4)", x= "Ligand Concentration (µM)", y= "Cell Count") 
+
+
+#trial 4
+ggplot(controls_three, aes(x = concentration, y = normalized, color = control)) +
+  geom_jitter(width = .1, height = 0) +
+  # facet_wrap(~ plate_number) + 
+  #scale_y_log10() +
+  labs(title = "MTT Assay Control Treatments (Trial 3)", x = "Concentration (nM)", y = "Absorbance (550nm)") 
+```
+
